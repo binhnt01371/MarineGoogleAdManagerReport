@@ -1,0 +1,73 @@
+﻿@model List<ChartData>
+@{
+    ViewData["Title"] = ViewBag.Category + " Details";
+}
+
+<h2 class="text-center my-4">@ViewBag.Category Details</h2>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <canvas id="detailsChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <table class="table table-bordered">
+                <thead>
+                    <tr><th>Label</th><th>Value</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Label</td>
+                            <td>@item.Value</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var colors = ['blue', 'orange', 'red', 'green', 'yellow'];
+            var chartData = @Html.Raw(Json.Serialize(Model));
+            var category = "@ViewBag.Category";
+            console.log(category);
+            var ctx = document.getElementById("detailsChart").getContext("2d");
+            if (category === "IMPRESSIONS") {
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.map(x => x.label),
+                        datasets: [{
+                            label: category,
+                            data: chartData.map(x => x.value),
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    }
+                });
+            }
+            else {
+                var chart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: chartData.map(x => x.label),
+                        datasets: [{
+                            data: chartData.map(x => x.value),
+                            backgroundColor: colors
+                        }]
+                    }
+                });
+            }
+        });
+    </script>
+}

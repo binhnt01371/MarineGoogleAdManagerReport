@@ -1,0 +1,154 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<h2 class="text-center my-4">Ad Performance Dashboard</h2>
+
+<div class="container">
+
+    <!-- Impressions Section -->
+    <div class="row mb-5">
+        <h3>Ad Impressions</h3>
+        <div class="col-md-8">
+            <canvas id="barChart" class="chart-clickable"></canvas>
+        </div>
+        @* <div class="col-md-6">
+            <table class="table table-bordered">
+                <thead>
+                    <tr><th>Date</th><th>Impressions</th></tr>
+                </thead>
+                <tbody id="impressionsTable"></tbody>
+            </table>
+        </div> *@
+    </div>
+
+    <!-- Countries Section -->
+    <div class="row mb-5">
+        <h3>Top Countries</h3>
+        <div class="col-md-6">
+            <table class="table table-bordered">
+                <thead>
+                    <tr><th>Country</th><th>Percentage</th></tr>
+                </thead>
+                <tbody id="countriesTable"></tbody>
+            </table>
+        </div>
+        <div class="col-md-3">
+            <canvas id="countriesChart" class="chart-clickable"></canvas>
+        </div>
+    </div>
+
+    <!-- Devices Section -->
+    <div class="row mb-5">
+        <h3>Device Usage</h3>
+        <div class="col-md-6">
+            <table class="table table-bordered">
+                <thead>
+                    <tr><th>Device</th><th>Usage %</th></tr>
+                </thead>
+                <tbody id="devicesTable"></tbody>
+            </table>
+        </div>
+        <div class="col-md-3">
+            <canvas id="devicesChart" class="chart-clickable"></canvas>
+        </div>
+    </div>
+
+    <!-- Browsers Section -->
+    <div class="row mb-5">
+        <h3>Browser Usage</h3>
+        <div class="col-md-6">
+            <table class="table table-bordered">
+                <thead>
+                    <tr><th>Browser</th><th>Usage %</th></tr>
+                </thead>
+                <tbody id="browsersTable"></tbody>
+            </table>
+        </div>
+        <div class="col-md-3">
+            <canvas id="browsersChart" class="chart-clickable"></canvas>
+        </div>
+    </div>
+
+    <!-- Continent Section -->
+    <div class="row mb-5">
+        <h3>Continent Usage</h3>
+        <div class="col-md-6">
+            <table class="table table-bordered">
+                <thead>
+                    <tr><th>Continent</th><th>Usage %</th></tr>
+                </thead>
+                <tbody id="continentsTable"></tbody>
+            </table>
+        </div>
+        <div class="col-md-3">
+            <canvas id="continentsChart" class="chart-clickable"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function navigateToDetails(category) {
+            window.location.href = "/Home/Details?category=" + category;
+        }
+
+        $(document).ready(function () {
+            $.ajax({
+                url: '@Url.Action("GetChartData", "Home")',
+                method: 'GET',
+                success: function (data) {
+
+                    function createPieChart(id, dataset, colors, category, tableId) {
+                        var chart = new Chart(document.getElementById(id).getContext('2d'), {
+                            type: 'pie',
+                            data: {
+                                labels: dataset.map(x => x.label),
+                                datasets: [{
+                                    data: dataset.map(x => x.value),
+                                    backgroundColor: colors
+                                }]
+                            }
+                        });
+
+                        $("#" + id).click(() => navigateToDetails(category));
+
+                        let table = $("#" + tableId);
+                        dataset.forEach(item => {
+                            table.append(`<tr><td>${item.label}</td><td>${item.value}%</td></tr>`);
+                        });
+                    }
+
+                    var colors = ['blue', 'orange', 'red', 'green', 'yellow'];
+
+                    createPieChart('countriesChart', data.countries, colors, 'countries', 'countriesTable');
+                    createPieChart('devicesChart', data.devices, colors, 'devices', 'devicesTable');
+                    createPieChart('browsersChart', data.browsers, colors, 'browsers', 'browsersTable');
+                    createPieChart('continentsChart', data.continents, colors, 'continents', 'continentsTable');
+
+                    var barChart = new Chart(document.getElementById('barChart').getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: data.impressions.map(x => x.label),
+                            datasets: [{
+                                label: 'Ad Impressions',
+                                data: data.impressions.map(x => x.value),
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        }
+                    });
+
+                    $("#barChart").click(() => navigateToDetails('impressions'));
+
+                    let impressionsTable = $("#impressionsTable");
+                    data.impressions.forEach(item => {
+                        impressionsTable.append(`<tr><td>${item.label}</td><td>${item.value}</td></tr>`);
+                    });
+                }
+            });
+        });
+    </script>
+}
